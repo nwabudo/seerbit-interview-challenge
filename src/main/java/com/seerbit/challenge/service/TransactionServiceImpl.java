@@ -59,4 +59,9 @@ public class TransactionServiceImpl implements TransactionService {
     public List<TransactionRequest> fetchAllTransactionList() {
         return this.transactionRequestList;
     }
+
+    @Override
+    public void deleteTransactions() {
+        this.transactionRequestList.clear();
+    }
 }

@@ -21,8 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,6 +44,7 @@ class TransactionControllerTest {
     void setUp() {
         doNothing().when(transactionService).saveTransaction(any());
         when(transactionService.getStatistics()).thenReturn(mockResponse());
+        doNothing().when(transactionService).deleteTransactions();
     }
 
     @Test
@@ -98,6 +98,14 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.avg", Is.is(9.00)))
                 .andExpect(jsonPath("$.sum", Is.is(27.00)))
                 .andExpect(jsonPath("$.count", Is.is(3)))
+                .andDo(print());
+    }
+
+    @Test
+    void whenDeleteIsInvoked_shouldReturnNoContentStatus() throws Exception {
+
+        mockMvc.perform(delete(URL_BASE))
+                .andExpect(status().isNoContent())
                 .andDo(print());
     }
 

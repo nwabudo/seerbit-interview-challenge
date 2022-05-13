@@ -47,6 +47,13 @@ class TransactionServiceImplTest {
         assertEquals(new BigDecimal("142.00").divide(BigDecimal.valueOf(4)), response.getAvg(), "Sum will be 142");
     }
 
+    @Test
+    void shouldDeleteAllData_OnAction() {
+        populateListAndAssert();
+        this.transactionService.deleteTransactions();
+        assertEquals(0, transactionService.fetchAllTransactionList().size());//No request will remain
+    }
+
     void populateListAndAssert(){
         //Add to the List Once
         TransactionRequest tranRequest = formRequest("30.50", LocalDateTime.now().minusSeconds(27));

@@ -12,4 +12,6 @@ public interface TransactionService {
     StatisticsResponse getStatistics();
 
     List<TransactionRequest> fetchAllTransactionList();
+
+    void deleteTransactions();
 }

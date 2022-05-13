@@ -8,12 +8,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
-    private final List<TransactionRequest> transactionRequestList = new ArrayList<>();
+    private final List<TransactionRequest> transactionRequestList = Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public void saveTransaction(TransactionRequest transactionRequest) {
@@ -26,33 +27,33 @@ public class TransactionServiceImpl implements TransactionService {
         if(transactionRequestList.isEmpty())
             return new StatisticsResponse();
 
-        BigDecimal max = new BigDecimal("0.00"),
-                min = null,
-                sum = new BigDecimal("0.00");
+        final BigDecimal[] max = {new BigDecimal("0.00")};
+        final BigDecimal[] min = { null };
+        final BigDecimal[] sum = { new BigDecimal("0.00") };
 
-        long count = 0;
-        for(int i = 0; i < transactionRequestList.size(); i++){
-            TransactionRequest tran = transactionRequestList.get(i);
-            if(tran.getTimestamp().isBefore(LocalDateTime.now().minusSeconds(30)))
-                continue;
+        final long[] count = {0};
 
-            if(tran.getAmount().compareTo(max) > 0)
-                max = tran.getAmount();
+        transactionRequestList.stream()
+                .filter(tran -> tran.getTimestamp().isAfter(LocalDateTime.now().minusSeconds(30)))
+                .forEach(tran -> {
+                    if(tran.getAmount().compareTo(max[0]) > 0)
+                        max[0] = tran.getAmount();
 
-            if(min == null || tran.getAmount().compareTo(min) < 0)
-                min = tran.getAmount();
+                    if(min[0] == null || tran.getAmount().compareTo(min[0]) < 0)
+                        min[0] = tran.getAmount();
 
-            sum = sum.add(tran.getAmount());
-            ++count;
-        }
-        max = max.setScale(2, RoundingMode.HALF_UP);
-        min = min.setScale(2, RoundingMode.HALF_UP);
-        sum = sum.setScale(2, RoundingMode.HALF_UP);
+                    sum[0] = sum[0].add(tran.getAmount());
+                    ++count[0];
+                });
 
-        BigDecimal avg = count != 0 ? sum.divide(BigDecimal.valueOf(count), RoundingMode.HALF_UP) : new BigDecimal("0.00");
+        max[0] = max[0].setScale(2, RoundingMode.HALF_UP);
+        min[0] = min[0].setScale(2, RoundingMode.HALF_UP);
+        sum[0] = sum[0].setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal avg = count[0] != 0 ? sum[0].divide(BigDecimal.valueOf(count[0]), RoundingMode.HALF_UP) : new BigDecimal("0.00");
         return StatisticsResponse.builder()
-                .max(max).min(min).avg(avg)
-                .sum(sum).count(count).build();
+                .max(max[0]).min(min[0]).avg(avg)
+                .sum(sum[0]).count(count[0]).build();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.seerbit.challenge.controller;
 
 import com.seerbit.challenge.requests.TransactionRequest;
+import com.seerbit.challenge.response.StatisticsResponse;
 import com.seerbit.challenge.service.TransactionService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,8 +30,8 @@ public class TransactionController {
     }
 
     @GetMapping("/statistics")
-    public void getTransactionStatistics(){
-
+    public ResponseEntity<StatisticsResponse> getTransactionStatistics(){
+        return new ResponseEntity<>(transactionService.getStatistics(), HttpStatus.OK);
     }
 
     @DeleteMapping

@@ -33,18 +33,20 @@ public class TransactionServiceImpl implements TransactionService {
 
         final long[] count = {0};
 
-        transactionRequestList.stream()
-                .filter(tran -> tran.getTimestamp().isAfter(LocalDateTime.now().minusSeconds(30)))
-                .forEach(tran -> {
-                    if(tran.getAmount().compareTo(max[0]) > 0)
-                        max[0] = tran.getAmount();
+        synchronized (transactionRequestList) {
+            transactionRequestList.stream()
+                    .filter(tran -> tran.getTimestamp().isAfter(LocalDateTime.now().minusSeconds(30)))
+                    .forEach(tran -> {
+                        if(tran.getAmount().compareTo(max[0]) > 0)
+                            max[0] = tran.getAmount();
 
-                    if(min[0] == null || tran.getAmount().compareTo(min[0]) < 0)
-                        min[0] = tran.getAmount();
+                        if(min[0] == null || tran.getAmount().compareTo(min[0]) < 0)
+                            min[0] = tran.getAmount();
 
-                    sum[0] = sum[0].add(tran.getAmount());
-                    ++count[0];
-                });
+                        sum[0] = sum[0].add(tran.getAmount());
+                        ++count[0];
+                    });
+        }
 
         max[0] = max[0].setScale(2, RoundingMode.HALF_UP);
         min[0] = min[0].setScale(2, RoundingMode.HALF_UP);

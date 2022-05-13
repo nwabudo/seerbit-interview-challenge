@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  seerbit:
+    build: .
+    container_name: seerbit_app
+    ports:
+      - "8084:8080"
+    networks:
+      - seerbit-network
+
+networks:
+  seerbit-network:
+    driver: bridge

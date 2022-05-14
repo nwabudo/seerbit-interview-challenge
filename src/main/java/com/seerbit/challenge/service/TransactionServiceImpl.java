@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -27,35 +28,37 @@ public class TransactionServiceImpl implements TransactionService {
         if(transactionRequestList.isEmpty())
             return new StatisticsResponse();
 
-        final BigDecimal[] max = {new BigDecimal("0.00")};
-        final BigDecimal[] min = { null };
-        final BigDecimal[] sum = { new BigDecimal("0.00") };
-
-        final long[] count = {0};
+        BigDecimal max = new BigDecimal("0.00");
+        BigDecimal min = null;
+        BigDecimal sum = new BigDecimal("0.00");
+        long count = 0;
 
         synchronized (transactionRequestList) {
-            transactionRequestList.stream()
-                    .filter(tran -> tran.getTimestamp().isAfter(LocalDateTime.now().minusSeconds(30)))
-                    .forEach(tran -> {
-                        if(tran.getAmount().compareTo(max[0]) > 0)
-                            max[0] = tran.getAmount();
+            Iterator i = transactionRequestList.iterator(); // Must be in synchronized block
+            while (i.hasNext()) {
+                TransactionRequest tran = (TransactionRequest) i.next();
+                if(tran.getTimestamp().isBefore(LocalDateTime.now().minusSeconds(30)))
+                    continue;
 
-                        if(min[0] == null || tran.getAmount().compareTo(min[0]) < 0)
-                            min[0] = tran.getAmount();
+                if(tran.getAmount().compareTo(max) > 0)
+                    max = tran.getAmount();
 
-                        sum[0] = sum[0].add(tran.getAmount());
-                        ++count[0];
-                    });
+                if(min == null || tran.getAmount().compareTo(min) < 0)
+                    min = tran.getAmount();
+
+                sum = sum.add(tran.getAmount());
+                ++count;
+            }
         }
 
-        max[0] = max[0].setScale(2, RoundingMode.HALF_UP);
-        min[0] = min[0].setScale(2, RoundingMode.HALF_UP);
-        sum[0] = sum[0].setScale(2, RoundingMode.HALF_UP);
+        max = max.setScale(2, RoundingMode.HALF_UP);
+        min = min.setScale(2, RoundingMode.HALF_UP);
+        sum = sum.setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal avg = count[0] != 0 ? sum[0].divide(BigDecimal.valueOf(count[0]), RoundingMode.HALF_UP) : new BigDecimal("0.00");
+        BigDecimal avg = count != 0 ? sum.divide(BigDecimal.valueOf(count), RoundingMode.HALF_UP) : new BigDecimal("0.00");
         return StatisticsResponse.builder()
-                .max(max[0]).min(min[0]).avg(avg)
-                .sum(sum[0]).count(count[0]).build();
+                .max(max).min(min).avg(avg)
+                .sum(sum).count(count).build();
     }
 
     @Override
